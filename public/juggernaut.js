@@ -26,6 +26,20 @@ var Juggernaut = function(options){
   this.socket.on("disconnect", this.proxy(this.ondisconnect));
 
   this.on("connect", this.proxy(this.writeMeta));
+  this.on("subscribed", function(channel) {
+    console.log("subscribed", channel);
+  });
+  this.on("unsubscribed", function(channel) {
+    console.log("unsubscribed", channel);
+  });
+  this.on("authenticate", function(credential_str) {
+    this.credential_str = credential_str;
+    console.log("authenticate", credential_str);
+  });
+  this.on("private", function(data) {
+    console.log("private", data);
+  });
+  
 };
 
 // Helper methods
@@ -57,6 +71,24 @@ Juggernaut.fn.connect = function(){
 
   this.state = "connecting";
   this.socket.connect();
+};
+
+Juggernaut.fn.authenticate = function(credential_str, callback){
+  var connectCallback = this.proxy(function(){
+    var message     = new Juggernaut.Message;
+    message.type    = "authenticate";
+    message.credential_str = credential_str;
+
+    this.write(message);
+  });
+
+  this.on("connect", connectCallback);
+
+  if (this.state == "connected")
+    connectCallback();
+  else {
+    this.connect();
+  }
 };
 
 Juggernaut.fn.subscribe = function(channel, callback){
@@ -131,8 +163,26 @@ Juggernaut.fn.ondisconnect = function(){
 Juggernaut.fn.onmessage = function(data){
   var message = Juggernaut.Message.fromJSON(data);
   this.trigger("message", message);
-  this.trigger("data", message.channel, message.data);
-  this.trigger(message.channel + ":data", message.data);
+  switch( message.type ) {
+    case "unsubscribed":
+      this.trigger("unsubscribed", message.channel);
+    break;    
+    case "subscribed":
+      this.trigger("subscribed", message.channel);
+    break;
+    case "authenticate":
+      this.trigger("authenticate", message.credential_str)
+    break;
+    case "private":
+      this.trigger("private", message.data);
+    break;
+    case "channel":
+      this.trigger("data", message.channel, message.data);
+      this.trigger(message.channel + ":data", message.data);
+    break;
+    default:
+      throw "Unknown type"
+  }
 };
 
 Juggernaut.fn.reconnect = function(){
