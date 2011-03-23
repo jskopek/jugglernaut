@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="charset" content="utf-8">
+  <title>Juggernaut</title>
+  <script src="http://localhost:8080/json.js" type="text/javascript" charset="utf-8"></script>
+  <script src="http://localhost:8080/socket_io.js" type="text/javascript" charset="utf-8"></script>
+  <script src="http://localhost:8080/juggernaut.js" type="text/javascript" charset="utf-8"></script>
+{#  <script src="{{ MEDIA_URL }}test.js" type="text/javascript" charset="utf-8"></script>#}
+
+  <style type="text/css" media="screen">
+    h1 {
+      margin: 1em 0;
+    }
+
+    #log {
+      padding: 5px;
+      background: #CCC;
+      height: 500px;
+      width: 400px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Juggernaut - Hello World!</h1>
+
+  <textarea id="log" readonly></textarea>
+
+  <script type="text/javascript" charset="utf-8">
+    var logElement = document.getElementById("log");
+    logElement.value = "";
+    var log = function(data){
+      logElement.value += (data + "\n");
+    };
+
+    var jug = new Juggernaut({secure: ('https:' == document.location.protocol)});
+
+    jug.on("connect", function(){
+		log("Connected");
+		log("Session ID: " + jug.sessionID);
+
+        log("Subscribing to chat");
+        jug.subscribe("chat", function(data){});
+	});
+    
+    jug.on("disconnect", function(){ log("Disconnected") });
+    jug.on("reconnect", function(){ log("Reconnecting") });
+
+    jug.on("message", function(msg) {
+		console.log(msg);
+	})
+
+	jug.on("data", function(channel, data) {
+        log("Channel: " + channel + " Message: " + data);
+	});
+
+    jug.connect();
+
+
+    // Expose for debugging
+    window.jug = jug;
+  </script>
+</body>
+</html>
+
+<!-- <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<script src="http://localhost:8080/application.js" type="text/javascript" charset="utf-8"></script>
+<script type="text/javascript" charset="utf-8">
+  var jug = new Juggernaut;
+  jug.subscribe("/chats", function(data){
+    var li = $("<li />");
+    li.text(data);
+    $("#chats").append(li);
+  });
+</script>
+
+
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" >
+<title>HTML Strict</title>
+</head>
+<body>
+<h1>Received messages</h1>
+
+<ul id="chats">
+</ul>
+
+</body>
+</html> -->
