@@ -1,0 +1,7 @@
+{
+	"port": 9000,
+	"debug": true,
+	"channel_authentication": "server",
+	"secret": "6z=C.5.#XImojtXXSvW4aVUEQr"
+	
+}
