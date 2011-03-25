@@ -17,14 +17,6 @@ var Juggernaut = function(options){
   this.state    = "disconnected";
   this.meta     = this.options.meta;
 
-  this.socket = new io.Socket(this.host,
-    {rememberTransport: false, port: this.port, secure: this.options.secure}
-  );
-
-  this.socket.on("connect",    this.proxy(this.onconnect));
-  this.socket.on("message",    this.proxy(this.onmessage));
-  this.socket.on("disconnect", this.proxy(this.ondisconnect));
-
   this.on("connect", this.proxy(this.writeMeta));
   this.on("subscribed", function(channel) {
     console.log("subscribed", channel);
@@ -39,12 +31,32 @@ var Juggernaut = function(options){
   this.on("private", function(data) {
     console.log("private", data);
   });
-  
 };
 
 // Helper methods
-
 Juggernaut.fn = Juggernaut.prototype;
+
+Juggernaut.fn.initialize = function() {
+  this.state = "disconnected";
+  if( this.socket ) { 
+    this.socket.disconnect(); //DOESN'T WORK! CONNECTION STILL ACTIVE
+  }
+  this.socket = new io.Socket(this.host, {rememberTransport: false, port: this.port, secure: this.options.secure});
+
+  this.socket.on("connect",    this.proxy(this.onconnect));
+  this.socket.on("message",    this.proxy(this.onmessage));
+  this.socket.on("disconnect", this.proxy(this.ondisconnect));
+
+  this.connect();
+}
+
+Juggernaut.fn.connect = function(){
+  if (this.state == "connected" || this.state == "connecting") return;
+
+  this.state = "connecting";
+  this.socket.connect();
+};
+
 Juggernaut.fn.proxy = function(func){
   var thisObject = this;
   return(function(){ return func.apply(thisObject, arguments); });
@@ -64,13 +76,6 @@ Juggernaut.fn.write = function(message){
     message = message.toJSON();
 
   this.socket.send(message);
-};
-
-Juggernaut.fn.connect = function(){
-  if (this.state == "connected" || this.state == "connecting") return;
-
-  this.state = "connecting";
-  this.socket.connect();
 };
 
 Juggernaut.fn.authenticate = function(credential_str, callback){
