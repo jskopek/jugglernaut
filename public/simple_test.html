@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="charset" content="utf-8">
+  <title>Juggernaut</title>
+  <script src="http://localhost:9000/json.js" type="text/javascript" charset="utf-8"></script>
+  <script src="http://localhost:9000/socket_io.js" type="text/javascript" charset="utf-8"></script>
+  <script src="http://localhost:9000/juggernaut.js" type="text/javascript" charset="utf-8"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.5.1/jquery.min.js" type="text/javascript" charset="utf-8"></script>
+
+  <style type="text/css" media="screen">
+    h1 {
+      margin: 1em 0;
+    }
+
+    #log {
+      padding: 5px;
+      background: #CCC;
+      height: 500px;
+      width: 400px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Juggernaut - Hello World!</h1>
+
+  <textarea id="log" readonly></textarea>
+  <p>
+	<button id='connect_chat'>Subscribe: Chat</button>
+  	<button id='connect_casual'>Subscribe: Casual</button>
+  	<button id='msg_chat'>Message: Chat</button>
+  	<button id='msg_casual'>Message: Casual</button>
+  </p>
+
+  <script type="text/javascript" charset="utf-8">
+    var secret = "6z=C.5.#XImojtXXSvW4aVUEQr";
+    var logElement = document.getElementById("log");
+    logElement.value = "";
+    var log = function(data){
+      logElement.value += (data + "\n");
+    };
+
+    var jug = new Juggernaut({
+		secure: ('https:' == document.location.protocol), 
+		host: 'localhost',
+		port: 9000
+	});
+
+	var conn = 0;
+    jug.on("connect", function(){
+		log("Connected");
+		log("Session ID: " + jug.sessionID);
+
+		conn++;
+		if( conn < 2 ) {
+			jug.authenticate("user1");			
+		}
+
+
+        // log("Subscribing to chat");
+        // jug.subscribe("chat", function(data){});
+	});
+    
+    jug.on("disconnect", function(){ log("Disconnected") });
+    jug.on("reconnect", function(){ log("Reconnecting") });
+
+    jug.on("message", function(msg) {
+		console.log(msg);
+	})
+	
+	jug.on("subscribe", function(channel, data) {
+        log("Subscribed to: " + channel);
+	});
+
+	jug.on("data", function(channel, data) {
+        log("Channel: " + channel + " Message: " + data);
+	});
+	jug.initialize();
+    jug.connect();
+
+
+    // Expose for debugging
+    window.jug = jug;
+
+	$("#connect_chat").click(function(e) {
+		e.preventDefault();
+		api_call("connect_to_channel", { channel: "chat", credentials: "user1", });
+	});
+	$("#connect_casual").click(function(e) {
+		e.preventDefault();
+		api_call("connect_to_channel", { channel: "casual", credentials: "user1", });
+	});
+	$("#msg_chat").click(function(e) {
+		e.preventDefault();
+		api_call("message", { channel: "chat", message: "Hey guys! I love to chat", });
+	});
+	$("#msg_casual").click(function(e) {
+		e.preventDefault();
+		api_call("message", { channel: "casual", message: "I'm also into light casual discussion", });
+	});			
+	function api_call(type, data) {
+		data = $.extend({
+			secret: secret
+		}, data);
+		
+		$.ajax({
+			type: 'POST',
+			url: 'http://localhost:9000/' + type,
+			data: data,
+			success: function() {
+				log("API call sent successfully");
+			}
+		});
+	}
+  </script>
+</body>
+</html>
