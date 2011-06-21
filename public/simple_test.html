@@ -3,9 +3,9 @@
 <head>
   <meta name="charset" content="utf-8">
   <title>Juggernaut</title>
-  <script src="http://localhost:9000/json.js" type="text/javascript" charset="utf-8"></script>
-  <script src="http://localhost:9000/socket_io.js" type="text/javascript" charset="utf-8"></script>
-  <script src="http://localhost:9000/juggernaut.js" type="text/javascript" charset="utf-8"></script>
+  <script src="http://localhost:8000/json.js" type="text/javascript" charset="utf-8"></script>
+  <script src="http://localhost:8000/socket_io.js" type="text/javascript" charset="utf-8"></script>
+  <script src="http://localhost:8000/juggernaut.js" type="text/javascript" charset="utf-8"></script>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.5.1/jquery.min.js" type="text/javascript" charset="utf-8"></script>
 
   <style type="text/css" media="screen">
@@ -44,7 +44,7 @@
     var jug = new Juggernaut({
 		secure: ('https:' == document.location.protocol), 
 		host: 'localhost',
-		port: 9000
+		port: 8000
 	});
 
 	var conn = 0;
@@ -76,7 +76,6 @@
 	jug.on("data", function(channel, data) {
         log("Channel: " + channel + " Message: " + data);
 	});
-	jug.initialize();
     jug.connect();
 
 
@@ -106,7 +105,7 @@
 		
 		$.ajax({
 			type: 'POST',
-			url: 'http://localhost:9000/' + type,
+			url: 'http://localhost:8000/' + type,
 			data: data,
 			success: function() {
 				log("API call sent successfully");

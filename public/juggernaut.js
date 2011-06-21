@@ -8,6 +8,21 @@ if (typeof window != 'undefined'){
 }
 
 var Juggernaut = function(options){
+  /* 
+  events:
+  
+  this.on("connect", function() {})
+  this.on("disconnect", function() {})
+  this.on("subscribed", function(channel) {})
+  this.on("unsubscribed", function(channel) {})
+  this.on("authenticate", function(credential_str) {})
+  this.on("private", function(data) {})
+  
+  this.on("data", function(channel, data) {});
+  this.on(channel + ":data", function(data) {});
+  this.on("message", function(message) { console.log(message.type, message.xyz)});
+  */
+  
   this.options = options || {};
   
   this.host = this.options.host || window.location.hostname;
@@ -18,37 +33,19 @@ var Juggernaut = function(options){
   this.meta     = this.options.meta;
 
   this.on("connect", this.proxy(this.writeMeta));
-  this.on("subscribed", function(channel) {
-    console.log("subscribed", channel);
-  });
-  this.on("unsubscribed", function(channel) {
-    console.log("unsubscribed", channel);
-  });
   this.on("authenticate", function(credential_str) {
     this.credential_str = credential_str;
-    console.log("authenticate", credential_str);
   });
-  this.on("private", function(data) {
-    console.log("private", data);
-  });
-};
 
-// Helper methods
-Juggernaut.fn = Juggernaut.prototype;
-
-Juggernaut.fn.initialize = function() {
-  this.state = "disconnected";
-  if( this.socket ) { 
-    this.socket.disconnect(); //DOESN'T WORK! CONNECTION STILL ACTIVE
-  }
   this.socket = new io.Socket(this.host, {rememberTransport: false, port: this.port, secure: this.options.secure});
 
   this.socket.on("connect",    this.proxy(this.onconnect));
   this.socket.on("message",    this.proxy(this.onmessage));
   this.socket.on("disconnect", this.proxy(this.ondisconnect));
+};
 
-  this.connect();
-}
+// Helper methods
+Juggernaut.fn = Juggernaut.prototype;
 
 Juggernaut.fn.connect = function(){
   if (this.state == "connected" || this.state == "connecting") return;
